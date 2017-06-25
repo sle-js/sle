@@ -1,0 +1,22 @@
+{
+  "name": "sle",
+  "version": "1.0.0",
+  "description": "node.js based sle runner",
+  "main": "index.js",
+  "bin": {
+    "sle": "bin/sle.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sle-js/sle.git"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/sle-js/sle/issues"
+  },
+  "homepage": "https://github.com/sle-js/sle#readme"
+}
