@@ -12,6 +12,7 @@ Assert.equal(mrequire.libraryPath(["core", "Data.Int", "1.2.3"]), process.env.HO
 
 
 Assert.equal(mrequire.fullLibraryPath(["core", "Data.Int", "1.2.3"]), process.env.HOME + "/.sle/core/Data.Int/1.2.3");
+Assert.equal(mrequire.fullLibraryPath(["github", "graeme-lockley/mn-Data.Int", "1.2.3"]), process.env.HOME + "/.sle/github/graeme-lockley/mn-Data.Int/1.2.3");
 
 
 const randomString = () =>
