@@ -1,4 +1,4 @@
-global.mrequire = require("./lib/mrequire");
+global.mrequire = require("./lib/mrequire").mrequire;
 
 
 module.exports = {};
