@@ -12,3 +12,15 @@ Assert.equal(mrequire.libraryPath(["core", "Data.Int", "1.2.3"]), process.env.HO
 
 
 Assert.equal(mrequire.fullLibraryPath(["core", "Data.Int", "1.2.3"]), process.env.HOME + "/.sle/core/Data.Int/1.2.3");
+
+
+const randomString = () =>
+    (Math.random() + "").substring(2, 10);
+
+const randomPath =
+    "./.idea/tmp/" + randomString() + "/" + randomString();
+
+if (!mrequire.dirExists(randomPath)) {
+    mrequire.mkdirp(randomPath);
+    Assert.equal(mrequire.dirExists(randomPath), true);
+}
