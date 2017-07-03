@@ -1,8 +1,5 @@
 #!/bin/bash
 
-REAL_PATH_NAME=`realpath $0`
-SCRIPT_HOME=`dirname $REAL_PATH_NAME`
-
 S_HOME=`dirname $0`
 
 if [[ $S_HOME != /* ]]
