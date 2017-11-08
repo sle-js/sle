@@ -1,4 +1,4 @@
-global.mrequire = require("./lib/mrequire").mrequire;
+global.mrequire = require("./src/SyncMRequire").mrequire;
 
 const Assumption = mrequire("core:System.Assumption:1.0.0");
 
