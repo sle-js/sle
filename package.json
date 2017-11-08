@@ -7,7 +7,7 @@
     "sle": "bin/sle.js"
   },
   "scripts": {
-    "test": "node test/MRequireTest"
+    "test": "node test/SyncMRequireTest"
   },
   "repository": {
     "type": "git",
