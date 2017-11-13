@@ -11,3 +11,9 @@ $require("./src/fileA")
 $require("./src/fileZ")
     .then(Assert.ifError)
     .catch(err => Assert.deepEqual(Errors.UnknownModule(Path.resolve(__dirname, "./PromiseRequireTest.js"))(Path.resolve(__dirname, "./src/fileZ"))("MODULE_NOT_FOUND"), err));
+
+
+// Successfully require a core module
+$require("core:Native.Data.Array:1.0.0")
+    .then(Array => true)
+    .catch(Assert.ifError);
