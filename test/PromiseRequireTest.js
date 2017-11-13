@@ -10,4 +10,4 @@ $require("./src/fileA")
 
 $require("./src/fileZ")
     .then(Assert.ifError)
-    .catch(err => Assert.deepEqual(Errors.UnknownModule(Path.resolve(__dirname, "./PromiseRequireTest.js"))(Path.resolve(__dirname, "./src/fileZ")), err));
+    .catch(err => Assert.deepEqual(Errors.UnknownModule(Path.resolve(__dirname, "./PromiseRequireTest.js"))(Path.resolve(__dirname, "./src/fileZ"))("MODULE_NOT_FOUND"), err));

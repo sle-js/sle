@@ -39,7 +39,7 @@ const $require = name => {
             try {
                 resolve(require(packageName));
             } catch (e) {
-                reject(Errors.UnknownModule(callerFileName)(packageName));
+                reject(Errors.UnknownModule(callerFileName)(packageName)(e.code));
             }
         })
         : $mrequire(name);
