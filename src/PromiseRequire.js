@@ -27,16 +27,19 @@ const callsite = function () {
 const $require = name => {
     return (name.indexOf(":") === -1)
         ? new Promise(function (resolve, reject) {
-            const dirname =
-                Path.dirname(callsite()[3].getFileName());
+            const callerFileName =
+                callsite()[3].getFileName();
+
+            const callerDirName =
+                Path.dirname(callerFileName);
 
             const packageName =
-                Path.resolve(dirname, name);
+                Path.resolve(callerDirName, name);
 
             try {
                 resolve(require(packageName));
             } catch (e) {
-                reject(Errors.UnknownModule(callsite()[3].getFileName())(packageName));
+                reject(Errors.UnknownModule(callerFileName)(packageName));
             }
         })
         : $mrequire(name);
