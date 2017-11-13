@@ -1,3 +1,4 @@
+const Errors = require("./Errors");
 const Path = require("path");
 
 const $mrequire = require("./PromiseMRequire").$mrequire;
@@ -35,7 +36,7 @@ const $require = name => {
             try {
                 resolve(require(packageName));
             } catch (e) {
-                reject(e);
+                reject(Errors.UnknownModule(callsite()[3].getFileName())(packageName));
             }
         })
         : $mrequire(name);
