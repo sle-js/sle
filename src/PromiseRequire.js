@@ -25,11 +25,11 @@ const callsite = function () {
 
 
 const $require = name => {
+    const callerFileName =
+        callsite()[1].getFileName();
+
     return (name.indexOf(":") === -1)
         ? new Promise(function (resolve, reject) {
-            const callerFileName =
-                callsite()[3].getFileName();
-
             const callerDirName =
                 Path.dirname(callerFileName);
 
@@ -42,7 +42,7 @@ const $require = name => {
                 reject(Errors.UnknownModule(callerFileName)(packageName)(e.code));
             }
         })
-        : $mrequire(name);
+        : $mrequire(callerFileName)(name);
 };
 
 

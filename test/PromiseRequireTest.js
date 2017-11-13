@@ -17,3 +17,9 @@ $require("./src/fileZ")
 $require("core:Native.Data.Array:1.0.0")
     .then(Array => true)
     .catch(Assert.ifError);
+
+
+// Unrecognised mrequire name format
+$require("core:Bob")
+    .then(Assert.ifError)
+    .catch(err => Assert.deepEqual(Errors.UnrecognisedNameFormat(Path.resolve(__dirname, "./PromiseRequireTest.js"))("core:Bob"), err));
