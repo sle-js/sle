@@ -26,11 +26,14 @@ const callsite = function () {
 const $require = name => {
     return (name.indexOf(":") === -1)
         ? new Promise(function (resolve, reject) {
-            try {
-                const dirname =
-                    Path.dirname(callsite()[3].getFileName());
+            const dirname =
+                Path.dirname(callsite()[3].getFileName());
 
-                resolve(require(Path.resolve(dirname, name)));
+            const packageName =
+                Path.resolve(dirname, name);
+
+            try {
+                resolve(require(packageName));
             } catch (e) {
                 reject(e);
             }
