@@ -88,7 +88,7 @@ const mrequire = callerFileName => name => {
         if (names[0] in handlers) {
             return handlers[names[0]](name)(names);
         } else {
-            throw new GeneralException(`Unrecognised mrequire handler: ${names[0]}`, {name: name});
+            throw Errors.UnrecognisedHandler(callerFileName)(name)(names[0])(Object.keys(handlers));
         }
     } else {
         throw Errors.UnrecognisedNameFormat(callerFileName)(name);

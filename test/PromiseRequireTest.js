@@ -22,4 +22,10 @@ $require("core:Native.Data.Array:1.0.0")
 // Unrecognised mrequire name format
 $require("core:Bob")
     .then(Assert.ifError)
-    .catch(err => Assert.deepEqual(Errors.UnrecognisedNameFormat(Path.resolve(__dirname, "./PromiseRequireTest.js"))("core:Bob"), err));
+    .catch(err => Assert.deepEqual(Errors.UnrecognisedNameFormat(Path.resolve(__dirname, "./PromiseRequireTest.js"))("core:Bob"), err));// Unrecognised mrequire name format
+
+
+// Unrecognised mrequire handler
+$require("hello:Bob:1.0.0")
+    .then(Assert.ifError)
+    .catch(err => Assert.deepEqual(Errors.UnrecognisedHandler(Path.resolve(__dirname, "./PromiseRequireTest.js"))("hello:Bob:1.0.0")("hello")(["core", "github"]), err));
