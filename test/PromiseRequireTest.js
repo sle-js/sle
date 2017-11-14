@@ -14,7 +14,7 @@ $require("./src/fileZ")
 
 
 // Successfully require a core module
-$require("core:Native.Data.Array:1.0.0")
+$require("core:Text.Parsing.Combinators:1.0.0")
     .then(Array => true)
     .catch(Assert.ifError);
 
