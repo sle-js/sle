@@ -55,10 +55,15 @@ const writeFile = fileName => content =>
     denodeify(cb => FS.writeFile(fileName, content, {encoding: "utf8"}, cb));
 
 
+const mkdir = fileName =>
+    denodeify(cb => FS.mkdir(fileName, cb));
+
+
 module.exports = {
     close,
     futimes,
     lstat,
+    mkdir,
     open,
     readdir,
     readFile,
