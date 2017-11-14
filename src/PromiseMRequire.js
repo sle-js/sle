@@ -88,20 +88,14 @@ handlers.core = loadPackage("sle-js/lib-");
 handlers.github = loadPackage("");
 
 
-const $mrequire = callerFileName => name => {
-    const names =
-        name.split(':');
-
-    if (names.length === 3) {
-        if (names[0] in handlers) {
-            return handlers[names[0]](name)(names);
-        } else {
-            return Promise.reject(Errors.UnrecognisedHandler(callerFileName)(name)(names[0])(Object.keys(handlers)));
-        }
-    } else {
-        return Promise.reject(Errors.UnrecognisedNameFormat(callerFileName)(name));
-    }
-};
+const $mrequire = callerFileName => name =>
+    Promise
+        .resolve(name.split(':'))
+        .then(names => (names.length === 3)
+            ? (names[0] in handlers)
+                ? handlers[names[0]](name)(names)
+                : Errors.UnrecognisedHandler(callerFileName)(name)(names[0])(Object.keys(handlers))
+            : Errors.UnrecognisedNameFormat(callerFileName)(name));
 
 
 module.exports = {
