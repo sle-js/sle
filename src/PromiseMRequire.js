@@ -5,18 +5,6 @@ const Path = require('path');
 const ChildProcess = require("child_process");
 
 
-class GeneralException {
-    constructor(msg, state) {
-        this.msg = msg;
-        this.state = state;
-    }
-
-    toString() {
-        return `${this.msg}: ${JSON.stringify(this.state)}`;
-    }
-}
-
-
 const $dirExists = directoryName =>
     FileSystem
         .stat(directoryName)
@@ -50,9 +38,27 @@ const $mkdirp = directoryName =>
                     .then(() => FileSystem.mkdir(directoryName)));
 
 
-const loadPackage = prefix => name => names => {
+const exec = command => options =>
+    new Promise((resolve, reject) =>
+        ChildProcess.exec(command, options, (error) =>
+            error
+                ? reject(error)
+                : resolve(true)
+        ));
+
+
+const loadPackage = prefix => callerFileName => name => names => {
     const fullPathName =
         fullLibraryPath(names);
+
+    const checkOutPackage = () => {
+        const command =
+            `git clone --quiet -b ${names[2]} --single-branch https://github.com/${prefix}${names[1]}.git ${names[2]} 2>&1 >> /dev/null`;
+
+        return exec(command)({cwd: libraryPath(names)})
+            .catch(err => Promise.reject(Errors.UnableToRetrievePackage(callerFileName)(err.message.trim())));
+    };
+
 
     return $dirExists(fullPathName)
         .then(exists => {
@@ -62,24 +68,18 @@ const loadPackage = prefix => name => names => {
                     console.log(`Installing ${name}`);
 
                     return $mkdirp(libraryPath(names))
+                        .then(checkOutPackage)
                         .then(() => {
-                            try {
-                                ChildProcess.execSync(`git clone --quiet -b ${names[2]} --single-branch https://github.com/${prefix}${names[1]}.git ${names[2]} 2>&1 >> /dev/null`, {cwd: libraryPath(names)});
-
-                                const testFileName = Path.resolve(fullPathName, "tests.js");
-                                if (fileExists(testFileName)) {
-                                    console.log(`Running tests ${testFileName}`);
-                                    require(testFileName);
-                                }
-                            } catch (e) {
-                                throw new GeneralException(`Unable to checkout ${name}: ${e}`, {exception: e});
+                            const testFileName = Path.resolve(fullPathName, "tests.js");
+                            if (fileExists(testFileName)) {
+                                console.log(`Running tests ${testFileName}`);
+                                require(testFileName);
                             }
                         })
                         .then(() => Promise.resolve(require(Path.resolve(fullPathName, 'index.js'))));
                 }
             }
-        )
-        .catch(e => new GeneralException(`Unable to checkout ${name}: ${e}`, {exception: e}));
+        );
 };
 
 
@@ -93,7 +93,7 @@ const $mrequire = callerFileName => name =>
         .resolve(name.split(':'))
         .then(names => (names.length === 3)
             ? (names[0] in handlers)
-                ? handlers[names[0]](name)(names)
+                ? handlers[names[0]](callerFileName)(name)(names)
                 : Errors.UnrecognisedHandler(callerFileName)(name)(names[0])(Object.keys(handlers))
             : Errors.UnrecognisedNameFormat(callerFileName)(name));
 
