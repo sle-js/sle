@@ -1,8 +1,18 @@
 const Errors = require("./Errors");
 const FileSystem = require("./FileSystem");
-const FS = require("fs");
 const Path = require('path');
 const ChildProcess = require("child_process");
+
+
+const $require = callerFileName => name => {
+    return new Promise(function (resolve, reject) {
+        try {
+            resolve(require(name));
+        } catch (e) {
+            reject(Errors.UnknownModule(callerFileName)(name)(e.code));
+        }
+    });
+};
 
 
 const $dirExists = directoryName =>
@@ -12,21 +22,11 @@ const $dirExists = directoryName =>
         .catch(_ => Promise.resolve(false));
 
 
-const fileExists = fileName => {
-    try {
-        return FS.statSync(fileName).isFile();
-    } catch (e) {
-        return false;
-    }
-};
-
-
-const libraryPath = names =>
-    `${process.env.HOME}/.sle/${names[0]}/${names[1]}`;
-
-
-const fullLibraryPath = names =>
-    Path.resolve(libraryPath(names), names[2]);
+const $fileExists = fileName =>
+    FileSystem
+        .stat(fileName)
+        .then(stat => Promise.resolve(stat.isFile()))
+        .catch(() => Promise.resolve(false));
 
 
 const $mkdirp = directoryName =>
@@ -35,10 +35,13 @@ const $mkdirp = directoryName =>
             (exists)
                 ? Promise.resolve(true)
                 : $mkdirp(Path.dirname(directoryName))
-                    .then(() => FileSystem.mkdir(directoryName)));
+                    .then(() => FileSystem
+                        .mkdir(directoryName)
+                        .then(() => true)
+                        .catch(() => false)));
 
 
-const exec = command => options =>
+const $exec = command => options =>
     new Promise((resolve, reject) =>
         ChildProcess.exec(command, options, (error) =>
             error
@@ -48,38 +51,42 @@ const exec = command => options =>
 
 
 const loadPackage = prefix => callerFileName => name => names => {
+    const libraryPath =
+        `${process.env.HOME}/.sle/${names[0]}/${names[1]}`;
+
     const fullPathName =
-        fullLibraryPath(names);
+        Path.resolve(libraryPath, names[2]);
+
+    const testFileName =
+        Path.resolve(fullPathName, "tests.js");
 
     const checkOutPackage = () => {
         const command =
             `git clone --quiet -b ${names[2]} --single-branch https://github.com/${prefix}${names[1]}.git ${names[2]} 2>&1 >> /dev/null`;
 
-        return exec(command)({cwd: libraryPath(names)})
+        return $exec(command)({cwd: libraryPath})
             .catch(err => Promise.reject(Errors.UnableToRetrievePackage(callerFileName)(err.message.trim())));
     };
 
+    const performTests = () =>
+        $fileExists(testFileName)
+            .then(testFileExists =>
+                testFileExists
+                    ? Promise
+                        .resolve(console.log(`Running tests ${testFileName}`))
+                        .then($require(callerFileName)(testFileName))
+                        .then(() => true)
+                    : Promise.resolve(false));
 
     return $dirExists(fullPathName)
-        .then(exists => {
-                if (exists) {
-                    return Promise.resolve(require(Path.resolve(fullPathName, 'index.js')));
-                } else {
-                    console.log(`Installing ${name}`);
-
-                    return $mkdirp(libraryPath(names))
-                        .then(checkOutPackage)
-                        .then(() => {
-                            const testFileName = Path.resolve(fullPathName, "tests.js");
-                            if (fileExists(testFileName)) {
-                                console.log(`Running tests ${testFileName}`);
-                                require(testFileName);
-                            }
-                        })
-                        .then(() => Promise.resolve(require(Path.resolve(fullPathName, 'index.js'))));
-                }
-            }
-        );
+        .then(exists =>
+            exists
+                ? Promise.resolve(true)
+                : Promise.resolve(console.log(`Installing ${name}`))
+                    .then(() => $mkdirp(libraryPath))
+                    .then(checkOutPackage)
+                    .then(performTests))
+        .then(() => $require(callerFileName)(Path.resolve(fullPathName, 'index.js')));
 };
 
 
