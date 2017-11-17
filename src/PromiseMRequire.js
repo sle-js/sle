@@ -64,14 +64,14 @@ const $mkTmpName = prefix =>
         .then(r => Promise.resolve(`${prefix}${r}`));
 
 
-const $unlinkAll = name =>
+const $removeAll = name =>
     FileSystem.stat(name)
         .then(stat =>
             stat.isDirectory()
                 ? FileSystem.readdir(name)
                     .then(dirs =>
                         Promise
-                            .all(dirs.map(n => Path.resolve(name, n)).map($unlinkAll))
+                            .all(dirs.map(n => Path.resolve(name, n)).map($removeAll))
                             .then(() => FileSystem.rmdir(name)))
                 : FileSystem.unlink(name));
 
@@ -115,7 +115,7 @@ const loadPackage = prefix => callerFileName => name => names => {
                         checkOutPackage(tmpName)
                             .then(() => FileSystem
                                 .rename(Path.resolve(libraryPath, tmpName))(Path.resolve(libraryPath, names[2]))
-                                .catch(() => $unlinkAll(Path.resolve(libraryPath, tmpName))))
+                                .catch(() => $removeAll(Path.resolve(libraryPath, tmpName))))
                             .then(performTests)
                     )
         )
