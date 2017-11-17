@@ -19,32 +19,6 @@ const $require = callerFileName => name => {
 };
 
 
-const $dirExists = directoryName =>
-    FileSystem
-        .stat(directoryName)
-        .then(stat => stat.isDirectory())
-        .catch(() => false);
-
-
-const $fileExists = fileName =>
-    FileSystem
-        .stat(fileName)
-        .then(stat => stat.isFile())
-        .catch(() => false);
-
-
-const $mkdirs = directoryName =>
-    $dirExists(directoryName)
-        .then(exists =>
-            (exists)
-                ? Promise.resolve(true)
-                : $mkdirs(Path.dirname(directoryName))
-                    .then(() => FileSystem
-                        .mkdir(directoryName)
-                        .then(() => true)
-                        .catch(() => false)));
-
-
 const $exec = command => options =>
     new Promise((resolve, reject) =>
         ChildProcess.exec(command, options, (error) =>
@@ -68,18 +42,6 @@ const $mkTmpName = prefix =>
         .then(r => `${prefix}${r}`);
 
 
-const $removeAll = name =>
-    FileSystem
-        .stat(name)
-        .then(stat =>
-            stat.isDirectory()
-                ? FileSystem.readdir(name)
-                    .then(dirs => Promise
-                        .all(dirs.map(n => Path.resolve(name, n)).map($removeAll))
-                        .then(() => FileSystem.rmdir(name)))
-                : FileSystem.unlink(name));
-
-
 const loadPackage = prefix => callerFileName => name => names => {
     const libraryPath =
         `${process.env.HOME}/.sle/${names[0]}/${names[1]}`;
@@ -99,25 +61,27 @@ const loadPackage = prefix => callerFileName => name => names => {
     };
 
     const performTests = () =>
-        $fileExists(testFileName)
+        FileSystem
+            .isFile(testFileName)
             .then(testFileExists =>
                 testFileExists
                     ? log(`Running tests ${testFileName}`)
                         .then(() => $require(callerFileName)(testFileName))
                     : false);
 
-    return $dirExists(fullPathName)
+    return FileSystem
+        .isDirectory(fullPathName)
         .then(exists =>
             exists
                 ? true
                 : log(`Installing ${name}`)
-                    .then(() => $mkdirs(libraryPath))
+                    .then(() => FileSystem.mkdirs(libraryPath))
                     .then(() => $mkTmpName("tmp"))
                     .then(tmpName =>
                         checkOutPackage(tmpName)
                             .then(() => FileSystem
                                 .rename(Path.resolve(libraryPath, tmpName))(Path.resolve(libraryPath, names[2]))
-                                .catch(() => $removeAll(Path.resolve(libraryPath, tmpName))))
+                                .catch(() => FileSystem.removeAll(Path.resolve(libraryPath, tmpName))))
                             .then(performTests)
                     )
         )

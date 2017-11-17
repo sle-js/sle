@@ -9,6 +9,7 @@
 //- Further to that a native package may only be dependent on other native packages or standard node.js packages
 
 const FS = require("fs");
+const Path = require("path");
 
 
 const denodeify = proc =>
@@ -71,14 +72,53 @@ const unlink = name =>
     denodeify(cb => FS.unlink(name, cb));
 
 
+const isDirectory = directoryName =>
+    stat(directoryName)
+        .then(stat => stat.isDirectory())
+        .catch(() => false);
+
+
+const isFile = fileName =>
+    stat(fileName)
+        .then(stat => stat.isFile())
+        .catch(() => false);
+
+
+const mkdirs = directoryName =>
+    isDirectory(directoryName)
+        .then(exists =>
+            exists
+                ? Promise.resolve(true)
+                : mkdirs(Path.dirname(directoryName))
+                    .then(() =>
+                        mkdir(directoryName)
+                            .then(() => true)
+                            .catch(() => false)));
+
+
+const removeAll = name =>
+    isDirectory(name)
+        .then(exists =>
+            exists
+                ? readdir(name)
+                    .then(dirs => Promise
+                        .all(dirs.map(n => Path.resolve(name, n)).map(removeAll))
+                        .then(() => rmdir(name)))
+                : unlink(name));
+
+
 module.exports = {
     close,
+    isDirectory,
+    isFile,
     futimes,
     lstat,
     mkdir,
+    mkdirs,
     open,
     readdir,
     readFile,
+    removeAll,
     rename,
     rmdir,
     stat,
