@@ -4,6 +4,10 @@ const Path = require('path');
 const ChildProcess = require("child_process");
 
 
+const $log = message =>
+    Promise.resolve(console.log(message));
+
+
 const $require = callerFileName => name => {
     return new Promise(function (resolve, reject) {
         try {
@@ -18,23 +22,23 @@ const $require = callerFileName => name => {
 const $dirExists = directoryName =>
     FileSystem
         .stat(directoryName)
-        .then(stat => Promise.resolve(stat.isDirectory()))
-        .catch(_ => Promise.resolve(false));
+        .then(stat => stat.isDirectory())
+        .catch(() => false);
 
 
 const $fileExists = fileName =>
     FileSystem
         .stat(fileName)
-        .then(stat => Promise.resolve(stat.isFile()))
-        .catch(() => Promise.resolve(false));
+        .then(stat => stat.isFile())
+        .catch(() => false);
 
 
-const $mkdirp = directoryName =>
+const $mkdirs = directoryName =>
     $dirExists(directoryName)
         .then(exists =>
             (exists)
                 ? Promise.resolve(true)
-                : $mkdirp(Path.dirname(directoryName))
+                : $mkdirs(Path.dirname(directoryName))
                     .then(() => FileSystem
                         .mkdir(directoryName)
                         .then(() => true)
@@ -61,16 +65,16 @@ const $randomInRange = min => max =>
 
 const $mkTmpName = prefix =>
     $randomInRange(0)(100000000)
-        .then(r => Promise.resolve(`${prefix}${r}`));
+        .then(r => `${prefix}${r}`);
 
 
 const $removeAll = name =>
-    FileSystem.stat(name)
+    FileSystem
+        .stat(name)
         .then(stat =>
             stat.isDirectory()
                 ? FileSystem.readdir(name)
-                    .then(dirs =>
-                        Promise
+                    .then(dirs => Promise
                             .all(dirs.map(n => Path.resolve(name, n)).map($removeAll))
                             .then(() => FileSystem.rmdir(name)))
                 : FileSystem.unlink(name));
@@ -98,18 +102,16 @@ const loadPackage = prefix => callerFileName => name => names => {
         $fileExists(testFileName)
             .then(testFileExists =>
                 testFileExists
-                    ? Promise
-                        .resolve(console.log(`Running tests ${testFileName}`))
+                    ? $log(`Running tests ${testFileName}`)
                         .then(() => $require(callerFileName)(testFileName))
-                        .then(() => true)
-                    : Promise.resolve(false));
+                    : false);
 
     return $dirExists(fullPathName)
         .then(exists =>
             exists
-                ? Promise.resolve(true)
-                : Promise.resolve(console.log(`Installing ${name}`))
-                    .then(() => $mkdirp(libraryPath))
+                ? true
+                : $log(`Installing ${name}`)
+                    .then(() => $mkdirs(libraryPath))
                     .then(() => $mkTmpName("tmp"))
                     .then(tmpName =>
                         checkOutPackage(tmpName)
