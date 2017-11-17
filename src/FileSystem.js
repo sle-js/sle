@@ -39,6 +39,10 @@ const readdir = directory =>
     denodeify(cb => FS.readdir(directory, cb));
 
 
+const rename = oldName => newName =>
+    denodeify(cb => FS.rename(oldName, newName, cb));
+
+
 const open = fileName => options =>
     denodeify(cb => FS.open(fileName, options, cb));
 
@@ -59,6 +63,14 @@ const mkdir = fileName =>
     denodeify(cb => FS.mkdir(fileName, cb));
 
 
+const rmdir = fileName =>
+    denodeify(cb => FS.rmdir(fileName, cb));
+
+
+const unlink = name =>
+    denodeify(cb => FS.unlink(name, cb));
+
+
 module.exports = {
     close,
     futimes,
@@ -67,6 +79,9 @@ module.exports = {
     open,
     readdir,
     readFile,
+    rename,
+    rmdir,
     stat,
+    unlink,
     writeFile
 };
