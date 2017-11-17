@@ -1,7 +1,7 @@
 const Errors = require("./Errors");
 const Path = require("path");
 
-const $mrequire = require("./PromiseMRequire").$mrequire;
+const remoteImport = require("./RemoteImport");
 
 
 const callsite = function () {
@@ -24,7 +24,7 @@ const callsite = function () {
 };
 
 
-const requireImport = callerFileName => name =>
+const importItem = callerFileName => name =>
     (name.indexOf(":") === -1)
         ? new Promise(function (resolve, reject) {
             const callerDirName =
@@ -39,14 +39,14 @@ const requireImport = callerFileName => name =>
                 reject(Errors.UnknownModule(callerFileName)(packageName)(e.code));
             }
         })
-        : $mrequire(callerFileName)(name);
+        : remoteImport(callerFileName)(name);
 
 
 const $import = name => {
     const callerFileName =
         callsite()[1].getFileName();
 
-    return requireImport(callerFileName)(name);
+    return importItem(callerFileName)(name);
 };
 
 
@@ -54,10 +54,7 @@ const $importAll = names => {
     const callerFileName =
         callsite()[1].getFileName();
 
-    const rr =
-        requireImport(callerFileName);
-
-    return Promise.all(names.map(rr));
+    return Promise.all(names.map(importItem(callerFileName)));
 };
 
 

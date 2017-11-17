@@ -75,8 +75,8 @@ const $removeAll = name =>
             stat.isDirectory()
                 ? FileSystem.readdir(name)
                     .then(dirs => Promise
-                            .all(dirs.map(n => Path.resolve(name, n)).map($removeAll))
-                            .then(() => FileSystem.rmdir(name)))
+                        .all(dirs.map(n => Path.resolve(name, n)).map($removeAll))
+                        .then(() => FileSystem.rmdir(name)))
                 : FileSystem.unlink(name));
 
 
@@ -130,7 +130,7 @@ handlers.core = loadPackage("sle-js/lib-");
 handlers.github = loadPackage("");
 
 
-const $mrequire = callerFileName => name =>
+module.exports = callerFileName => name =>
     Promise
         .resolve(name.split(':'))
         .then(names => (names.length === 3)
@@ -138,8 +138,3 @@ const $mrequire = callerFileName => name =>
                 ? handlers[names[0]](callerFileName)(name)(names)
                 : Errors.UnrecognisedHandler(callerFileName)(name)(names[0])(Object.keys(handlers))
             : Errors.UnrecognisedNameFormat(callerFileName)(name));
-
-
-module.exports = {
-    $mrequire
-};
