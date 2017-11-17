@@ -89,9 +89,10 @@ const loadPackage = prefix => callerFileName => name => names => {
 };
 
 
-const handlers = {};
-handlers.core = loadPackage("sle-js/lib-");
-handlers.github = loadPackage("");
+const handlers = {
+    core: loadPackage("sle-js/lib-"),
+    github: loadPackage("")
+};
 
 
 module.exports = callerFileName => name =>
