@@ -4,7 +4,7 @@ const Path = require('path');
 const ChildProcess = require("child_process");
 
 
-const $log = message =>
+const log = message =>
     Promise.resolve(console.log(message));
 
 
@@ -102,7 +102,7 @@ const loadPackage = prefix => callerFileName => name => names => {
         $fileExists(testFileName)
             .then(testFileExists =>
                 testFileExists
-                    ? $log(`Running tests ${testFileName}`)
+                    ? log(`Running tests ${testFileName}`)
                         .then(() => $require(callerFileName)(testFileName))
                     : false);
 
@@ -110,7 +110,7 @@ const loadPackage = prefix => callerFileName => name => names => {
         .then(exists =>
             exists
                 ? true
-                : $log(`Installing ${name}`)
+                : log(`Installing ${name}`)
                     .then(() => $mkdirs(libraryPath))
                     .then(() => $mkTmpName("tmp"))
                     .then(tmpName =>
