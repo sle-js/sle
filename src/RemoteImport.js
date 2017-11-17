@@ -1,5 +1,5 @@
 const Errors = require("./Errors");
-const FileSystem = require("./FileSystem");
+const FileSystem = mrequire("core:Native.System.IO.FileSystem:1.1.0");
 const Path = require('path');
 const ChildProcess = require("child_process");
 
