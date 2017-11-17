@@ -24,11 +24,8 @@ const callsite = function () {
 };
 
 
-const $require = name => {
-    const callerFileName =
-        callsite()[1].getFileName();
-
-    return (name.indexOf(":") === -1)
+const requireImport = callerFileName => name =>
+    (name.indexOf(":") === -1)
         ? new Promise(function (resolve, reject) {
             const callerDirName =
                 Path.dirname(callerFileName);
@@ -43,9 +40,28 @@ const $require = name => {
             }
         })
         : $mrequire(callerFileName)(name);
+
+
+const $require = name => {
+    const callerFileName =
+        callsite()[1].getFileName();
+
+    return requireImport(callerFileName)(name);
+};
+
+
+const $requireAll = names => {
+    const callerFileName =
+        callsite()[1].getFileName();
+
+    const rr =
+        requireImport(callerFileName);
+
+    return Promise.all(names.map(rr));
 };
 
 
 module.exports = {
-    $require
+    $require,
+    $requireAll
 };

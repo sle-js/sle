@@ -17,12 +17,34 @@ $require("./src/fileZ")
 $require("core:Text.Parsing.Combinators:1.0.0")
     .then(Array => true)
     .catch(Assert.ifError);
+$require("core:Text.Parsing.Combinators:1.0.0")
+    .then(Array => true)
+    .catch(Assert.ifError);
+$require("core:Text.Parsing.Combinators:1.0.0")
+    .then(Array => true)
+    .catch(Assert.ifError);
+$require("core:Text.Parsing.Combinators:1.0.0")
+    .then(Array => true)
+    .catch(Assert.ifError);
+
+
+// Successfully require multiple modules
+$requireAll(["core:Text.Parsing.Combinators:1.0.0", "./src/fileA", "core:Native.System.IO.FileSystem:1.0.0"])
+    .then(imports => true)
+    .catch(err => {
+        console.log(`Error: ${JSON.stringify(err, null, 2)}`);
+        Assert.ifError(err);
+    });
 
 
 // Unknown version
 $require("core:Text.Parsing.Combinators:0.0.0")
     .then(err => Assert.ifError(JSON.stringify(err)))
-    .catch(err => Assert.deepEqual(Errors.UnableToRetrievePackage(Path.resolve(__dirname, "./PromiseRequireTest.js"))("Command failed: git clone --quiet -b 0.0.0 --single-branch https://github.com/sle-js/lib-Text.Parsing.Combinators.git 0.0.0 2>&1 >> /dev/null"), err));
+    .catch(err => {
+        Assert.equal(err.kind, "UnableToRetrievePackage");
+        Assert.equal(true, err.message.startsWith("Command failed: git clone --quiet -b 0.0.0 --single-branch https://github.com/sle-js/lib-Text.Parsing.Combinators.git tmp"));
+        Assert.deepEqual(Errors.UnableToRetrievePackage(Path.resolve(__dirname, "./PromiseRequireTest.js"))(err.message), err)
+    });
 
 
 // Unrecognised mrequire name format

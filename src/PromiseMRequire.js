@@ -50,6 +50,32 @@ const $exec = command => options =>
         ));
 
 
+const $random = () =>
+    Promise.resolve(Math.random());
+
+
+const $randomInRange = min => max =>
+    $random()
+        .then(r => Math.floor((r * (max - min) + min)));
+
+
+const $mkTmpName = prefix =>
+    $randomInRange(0)(100000000)
+        .then(r => Promise.resolve(`${prefix}${r}`));
+
+
+const $unlinkAll = name =>
+    FileSystem.stat(name)
+        .then(stat =>
+            stat.isDirectory()
+                ? FileSystem.readdir(name)
+                    .then(dirs =>
+                        Promise
+                            .all(dirs.map(n => Path.resolve(name, n)).map($unlinkAll))
+                            .then(() => FileSystem.rmdir(name)))
+                : FileSystem.unlink(name));
+
+
 const loadPackage = prefix => callerFileName => name => names => {
     const libraryPath =
         `${process.env.HOME}/.sle/${names[0]}/${names[1]}`;
@@ -60,9 +86,9 @@ const loadPackage = prefix => callerFileName => name => names => {
     const testFileName =
         Path.resolve(fullPathName, "tests.js");
 
-    const checkOutPackage = () => {
+    const checkOutPackage = targetName => {
         const command =
-            `git clone --quiet -b ${names[2]} --single-branch https://github.com/${prefix}${names[1]}.git ${names[2]} 2>&1 >> /dev/null`;
+            `git clone --quiet -b ${names[2]} --single-branch https://github.com/${prefix}${names[1]}.git ${targetName} 2>&1 >> /dev/null`;
 
         return $exec(command)({cwd: libraryPath})
             .catch(err => Promise.reject(Errors.UnableToRetrievePackage(callerFileName)(err.message.trim())));
@@ -74,7 +100,7 @@ const loadPackage = prefix => callerFileName => name => names => {
                 testFileExists
                     ? Promise
                         .resolve(console.log(`Running tests ${testFileName}`))
-                        .then($require(callerFileName)(testFileName))
+                        .then(() => $require(callerFileName)(testFileName))
                         .then(() => true)
                     : Promise.resolve(false));
 
@@ -84,8 +110,15 @@ const loadPackage = prefix => callerFileName => name => names => {
                 ? Promise.resolve(true)
                 : Promise.resolve(console.log(`Installing ${name}`))
                     .then(() => $mkdirp(libraryPath))
-                    .then(checkOutPackage)
-                    .then(performTests))
+                    .then(() => $mkTmpName("tmp"))
+                    .then(tmpName =>
+                        checkOutPackage(tmpName)
+                            .then(() => FileSystem
+                                .rename(Path.resolve(libraryPath, tmpName))(Path.resolve(libraryPath, names[2]))
+                                .catch(() => $unlinkAll(Path.resolve(libraryPath, tmpName))))
+                            .then(performTests)
+                    )
+        )
         .then(() => $require(callerFileName)(Path.resolve(fullPathName, 'index.js')));
 };
 

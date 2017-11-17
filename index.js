@@ -2,6 +2,7 @@ global.mrequire = require("./src/SyncMRequire").mrequire;
 
 
 global.$require = require("./src/PromiseRequire").$require;
+global.$requireAll = require("./src/PromiseRequire").$requireAll;
 
 const Assumption = mrequire("core:System.Assumption:1.0.0");
 
