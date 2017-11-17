@@ -1,4 +1,4 @@
-module.exports = $require("./fileB").then(fileB => {
+module.exports = $import("./fileB").then(fileB => {
     const strlen = name =>
         name.length;
 

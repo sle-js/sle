@@ -42,7 +42,7 @@ const requireImport = callerFileName => name =>
         : $mrequire(callerFileName)(name);
 
 
-const $require = name => {
+const $import = name => {
     const callerFileName =
         callsite()[1].getFileName();
 
@@ -50,7 +50,7 @@ const $require = name => {
 };
 
 
-const $requireAll = names => {
+const $importAll = names => {
     const callerFileName =
         callsite()[1].getFileName();
 
@@ -62,6 +62,6 @@ const $requireAll = names => {
 
 
 module.exports = {
-    $require,
-    $requireAll
+    $import,
+    $importAll
 };

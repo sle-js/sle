@@ -1,8 +1,8 @@
 global.mrequire = require("./src/SyncMRequire").mrequire;
 
 
-global.$require = require("./src/Import").$require;
-global.$requireAll = require("./src/Import").$requireAll;
+global.$import = require("./src/Import").$import;
+global.$importAll = require("./src/Import").$importAll;
 
 const Assumption = mrequire("core:System.Assumption:1.0.0");
 

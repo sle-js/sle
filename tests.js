@@ -1,4 +1,4 @@
 require("./index");
 
 require("./test/SyncMRequireTest");
-require("./test/PromiseRequireTest");
+require("./test/ImportTest");
