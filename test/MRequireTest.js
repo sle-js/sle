@@ -1,10 +1,10 @@
 const Assert = require("assert");
 
-const mrequire = require("../src/SyncMRequire");
+const mrequire = require("../src/MRequire");
 
 
 Assert.equal(mrequire.dirExists("./test"), true);
-Assert.equal(mrequire.dirExists("./test/SyncMRequireTest.js"), false);
+Assert.equal(mrequire.dirExists("./test/MRequireTest.js"), false);
 Assert.equal(mrequire.dirExists("./bob"), false);
 
 

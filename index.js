@@ -1,4 +1,4 @@
-global.mrequire = require("./src/SyncMRequire").mrequire;
+global.mrequire = require("./src/MRequire").mrequire;
 
 
 global.$import = require("./src/Import").$import;
