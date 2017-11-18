@@ -30,13 +30,21 @@ const importItem = callerFileName => name =>
             const callerDirName =
                 Path.dirname(callerFileName);
 
-            const packageName =
-                Path.resolve(callerDirName, name);
+            const requireItem = name => {
+                try {
+                    resolve(require(name));
+                } catch (e) {
+                    reject(Errors.UnknownModule(callerFileName)(name)(e.code));
+                }
+            };
 
-            try {
-                resolve(require(packageName));
-            } catch (e) {
-                reject(Errors.UnknownModule(callerFileName)(packageName)(e.code));
+            if (name.startsWith(".") || name.startsWith(Path.sep)) {
+                const packageName =
+                    Path.resolve(callerDirName, name);
+
+                requireItem(packageName);
+            } else {
+                requireItem(name);
             }
         })
         : remoteImport(callerFileName)(name);

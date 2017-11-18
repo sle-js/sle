@@ -31,10 +31,7 @@ $import("core:Text.Parsing.Combinators:1.0.0")
 // Successfully require multiple modules
 $importAll(["core:Text.Parsing.Combinators:1.0.0", "./src/fileA", "core:Native.System.IO.FileSystem:1.0.0"])
     .then(imports => true)
-    .catch(err => {
-        console.log(`Error: ${JSON.stringify(err, null, 2)}`);
-        Assert.ifError(err);
-    });
+    .catch(Assert.ifError);
 
 
 // Unknown version
@@ -57,3 +54,9 @@ $import("core:Bob")
 $import("hello:Bob:1.0.0")
     .then(Assert.ifError)
     .catch(err => Assert.deepEqual(Errors.UnrecognisedHandler(Path.resolve(__dirname, "./ImportTest.js"))("hello:Bob:1.0.0")("hello")(["core", "github"]), err));
+
+
+// Importing a native node library
+$import("path")
+    .then(Path => true)
+    .catch(Assert.ifError);
