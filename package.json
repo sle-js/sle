@@ -1,6 +1,6 @@
 {
   "name": "sle",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "node.js based sle runner",
   "main": "index.js",
   "bin": {
