@@ -53,10 +53,17 @@ $import("core:Bob")
 // Unrecognised mrequire handler
 $import("hello:Bob:1.0.0")
     .then(Assert.ifError)
-    .catch(err => Assert.deepEqual(Errors.UnrecognisedHandler(Path.resolve(__dirname, "./ImportTest.js"))("hello:Bob:1.0.0")("hello")(["core", "github"]), err));
+    .catch(err => Assert.deepEqual(Errors.UnrecognisedHandler(Path.resolve(__dirname, "./ImportTest.js"))("hello:Bob:1.0.0")("hello")(["core", "github", "use"]), err));
 
 
 // Importing a native node library
 $import("path")
     .then(Path => true)
+    .catch(Assert.ifError);
+
+
+// Apply a tool through an import
+$import("use:./template/hello.template core:Tool.Template:1.0.0")
+    .then(template => template("Mary"))
+    .then(result => Assert.deepEqual(result, "Hello Mary"))
     .catch(Assert.ifError);

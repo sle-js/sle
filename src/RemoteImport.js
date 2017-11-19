@@ -2,6 +2,7 @@ const Errors = require("./Errors");
 const FileSystem = mrequire("core:Native.System.IO.FileSystem:1.1.0");
 const Path = require('path');
 const ChildProcess = require("child_process");
+const String = require("./String");
 
 
 const log = message =>
@@ -42,64 +43,93 @@ const $mkTmpName = prefix =>
         .then(r => `${prefix}${r}`);
 
 
-const loadPackage = prefix => callerFileName => name => names => {
-    const libraryPath =
-        `${process.env.HOME}/.sle/${names[0]}/${names[1]}`;
+const loadPackage = prefix => callerFileName => name => {
+    const names =
+        name.split(":");
 
-    const fullPathName =
-        Path.resolve(libraryPath, names[2]);
+    if (names.length === 3) {
+        const libraryPath =
+            `${process.env.HOME}/.sle/${names[0]}/${names[1]}`;
 
-    const testFileName =
-        Path.resolve(fullPathName, "tests.js");
+        const fullPathName =
+            Path.resolve(libraryPath, names[2]);
 
-    const checkOutPackage = targetName => {
-        const command =
-            `git clone --quiet -b ${names[2]} --single-branch https://github.com/${prefix}${names[1]}.git ${targetName} 2>&1 >> /dev/null`;
+        const testFileName =
+            Path.resolve(fullPathName, "tests.js");
 
-        return $exec(command)({cwd: libraryPath})
-            .catch(err => Promise.reject(Errors.UnableToRetrievePackage(callerFileName)(err.message.trim())));
-    };
+        const checkOutPackage = targetName => {
+            const command =
+                `git clone --quiet -b ${names[2]} --single-branch https://github.com/${prefix}${names[1]}.git ${targetName} 2>&1 >> /dev/null`;
 
-    const performTests = () =>
-        FileSystem
-            .isFile(testFileName)
-            .then(testFileExists =>
-                testFileExists
-                    ? log(`Running tests ${testFileName}`)
-                        .then(() => $require(callerFileName)(testFileName))
-                    : false);
+            return $exec(command)({cwd: libraryPath})
+                .catch(err => Promise.reject(Errors.UnableToRetrievePackage(callerFileName)(err.message.trim())));
+        };
 
-    return FileSystem
-        .isDirectory(fullPathName)
-        .then(exists =>
-            exists
-                ? true
-                : log(`Installing ${name}`)
-                    .then(() => FileSystem.mkdirs(libraryPath))
-                    .then(() => $mkTmpName("tmp"))
-                    .then(tmpName =>
-                        checkOutPackage(tmpName)
-                            .then(() => FileSystem
-                                .rename(Path.resolve(libraryPath, tmpName))(Path.resolve(libraryPath, names[2]))
-                                .catch(() => FileSystem.removeAll(Path.resolve(libraryPath, tmpName))))
-                            .then(performTests)
-                    )
-        )
-        .then(() => $require(callerFileName)(Path.resolve(fullPathName, 'index.js')));
+        const performTests = () =>
+            FileSystem
+                .isFile(testFileName)
+                .then(testFileExists =>
+                    testFileExists
+                        ? log(`Running tests ${testFileName}`)
+                            .then(() => $require(callerFileName)(testFileName))
+                        : false);
+
+        return FileSystem
+            .isDirectory(fullPathName)
+            .then(exists =>
+                exists
+                    ? true
+                    : log(`Installing ${name}`)
+                        .then(() => FileSystem.mkdirs(libraryPath))
+                        .then(() => $mkTmpName("tmp"))
+                        .then(tmpName =>
+                            checkOutPackage(tmpName)
+                                .then(() => FileSystem
+                                    .rename(Path.resolve(libraryPath, tmpName))(Path.resolve(libraryPath, names[2]))
+                                    .catch(() => FileSystem.removeAll(Path.resolve(libraryPath, tmpName))))
+                                .then(performTests)
+                        )
+            )
+            .then(() => $require(callerFileName)(Path.resolve(fullPathName, 'index.js')));
+    } else {
+        return Promise.reject(Errors.UnrecognisedNameFormat(callerFileName)(name));
+    }
+};
+
+
+const useOn = callerFileName => importURL => {
+    const prefixlessImportURL =
+        String.drop(4)(importURL);
+
+    const names =
+        prefixlessImportURL.split(" ");
+
+    if (names.length === 2) {
+        const inputFileName =
+            Path.resolve(Path.dirname(callerFileName), names[0]);
+
+        const toolURL =
+            names[1];
+
+        return $useOn(toolURL)(inputFileName);
+    } else {
+        return Promise.reject(Errors.UnrecognisedNameFormat(callerFileName)(importURL));
+    }
 };
 
 
 const handlers = {
     core: loadPackage("sle-js/lib-"),
-    github: loadPackage("")
+    github: loadPackage(""),
+    use: useOn
 };
 
 
-module.exports = callerFileName => name =>
-    Promise
-        .resolve(name.split(':'))
-        .then(names => (names.length === 3)
-            ? (names[0] in handlers)
-                ? handlers[names[0]](callerFileName)(name)(names)
-                : Errors.UnrecognisedHandler(callerFileName)(name)(names[0])(Object.keys(handlers))
-            : Errors.UnrecognisedNameFormat(callerFileName)(name));
+module.exports = callerFileName => name => {
+    const prefix =
+        String.takeWhile(c => c !== 58)(name);
+
+    return prefix in handlers
+        ? handlers[prefix](callerFileName)(name)
+        : Promise.reject(Errors.UnrecognisedHandler(callerFileName)(name)(prefix)(Object.keys(handlers)));
+};
