@@ -54,9 +54,6 @@ const loadPackage = prefix => callerFileName => name => {
         const fullPathName =
             Path.resolve(libraryPath, names[2]);
 
-        const testFileName =
-            Path.resolve(fullPathName, "tests.js");
-
         const checkOutPackage = targetName => {
             const command =
                 `git clone --quiet -b ${names[2]} --single-branch https://github.com/${prefix}${names[1]}.git ${targetName} 2>&1 >> /dev/null`;
@@ -65,14 +62,21 @@ const loadPackage = prefix => callerFileName => name => {
                 .catch(err => Promise.reject(Errors.UnableToRetrievePackage(callerFileName)(err.message.trim())));
         };
 
-        const performTests = () =>
-            FileSystem
-                .isFile(testFileName)
+        const performTests = tmpName => {
+            const tmpFullPathName =
+                Path.resolve(libraryPath, tmpName);
+
+            const tmpTestFileName =
+                Path.resolve(tmpFullPathName, "tests.js");
+
+            return FileSystem
+                .isFile(tmpTestFileName)
                 .then(testFileExists =>
                     testFileExists
-                        ? log(`Running tests ${testFileName}`)
-                            .then(() => $require(callerFileName)(testFileName))
+                        ? log(`Running tests ${tmpTestFileName}`)
+                            .then(() => $require(callerFileName)(tmpTestFileName))
                         : false);
+        };
 
         return FileSystem
             .isDirectory(fullPathName)
@@ -84,10 +88,11 @@ const loadPackage = prefix => callerFileName => name => {
                         .then(() => $mkTmpName("tmp"))
                         .then(tmpName =>
                             checkOutPackage(tmpName)
+                                .then(() => performTests(tmpName))
                                 .then(() => FileSystem
                                     .rename(Path.resolve(libraryPath, tmpName))(Path.resolve(libraryPath, names[2]))
-                                    .catch(() => FileSystem.removeAll(Path.resolve(libraryPath, tmpName))))
-                                .then(performTests)
+                                    .catch(() => FileSystem.removeAll(Path.resolve(libraryPath, tmpName)))
+                                )
                         )
             )
             .then(() => $require(callerFileName)(Path.resolve(fullPathName, 'index.js')));
