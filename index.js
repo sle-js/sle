@@ -7,7 +7,7 @@ global.assumptionEqual = Assumption.assumptionEqual;
 global.$import = require("./src/Import").$import;
 global.$importAll = require("./src/Import").$importAll;
 
-global.$useOn = mrequire("core:System.Use:1.0.0").useOn;
+global.$useOn = mrequire("core:System.Use:1.0.1").useOn;
 
 
 module.exports = {};
